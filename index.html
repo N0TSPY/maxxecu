@@ -7,53 +7,79 @@
   <style>
     html, body {
       margin: 0;
+      padding: 0;
       height: 100%;
       width: 100%;
       background: #000;
       overflow: hidden;
     }
-    #toggle {
-      border: none;
-      background: transparent;
-      padding: 0;
-      margin: 0;
+    /* Clickable stage that fills the viewport and resizes correctly */
+    .stage {
       width: 100vw;
-      height: 100vh;
+      height: 100vh;          /* fallback */
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-size: cover; /* change to 'contain' if you prefer no cropping */
       cursor: pointer;
-    }
-    #toggle img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
       user-select: none;
-      -webkit-user-drag: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @supports (height: 100dvh) {
+      .stage {
+        width: 100dvw;
+        height: 100dvh;
+      }
     }
   </style>
 </head>
 <body>
-  <button id="toggle" aria-label="">
-    <img id="img" src="https://raw.githubusercontent.com/N0TSPY/maxxecu/main/SWITCH2.png" alt="">
-  </button>
+  <div id="stage" class="stage" aria-hidden="true"></div>
 
   <script>
     const A = "https://raw.githubusercontent.com/N0TSPY/maxxecu/main/SWITCH2.png";
     const B = "https://raw.githubusercontent.com/N0TSPY/maxxecu/main/SWITCH3.png";
-    const btn = document.getElementById("toggle");
-    const img = document.getElementById("img");
+    const el = document.getElementById("stage");
+
+    // Preload images to ensure instant, flicker-free toggle
+    const preloadA = new Image();
+    const preloadB = new Image();
+    preloadA.src = A;
+    preloadB.src = B;
 
     let state = "A";
+    el.style.backgroundImage = `url("${A}")`;
 
-    function setImage(srcBase) {
-      img.src = srcBase + "?t=" + Date.now();
-    }
-
-    btn.addEventListener("click", () => {
+    el.addEventListener("click", () => {
+      // Toggle background
       state = state === "A" ? "B" : "A";
-      setImage(state === "A" ? A : B);
+      const next = state === "A" ? A : B;
+      el.style.backgroundImage = `url("${next}")`;
+
+      // Dispatch fake "F" keydown event
+      const evt = new KeyboardEvent("keydown", {
+        key: "f",
+        code: "KeyF",
+        keyCode: 70,
+        which: 70,
+        bubbles: true
+      });
+      document.dispatchEvent(evt);
+      console.log("Fake F keydown fired");
     });
 
-    setImage(A);
+    // Example listener (you can remove this; just for demo)
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "f") {
+        console.log("F detected by listener");
+      }
+    });
+
+    // Ensure it always fills on window resize
+    window.addEventListener("resize", () => {
+      el.style.transform = "translateZ(0)";
+      requestAnimationFrame(() => { el.style.transform = ""; });
+    });
   </script>
 </body>
 </html>
